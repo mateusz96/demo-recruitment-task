@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+    <changeSet author="Mateusz" id="2024-05-20">
+        <sql splitStatements="false">
+            create extension if not exists "uuid-ossp";
+
+            CREATE TABLE IF NOT EXISTS customers
+            (
+            id uuid default uuid_generate_v4() not null
+            constraint customer_pkey
+            primary key,
+            first_name varchar(50) not null,
+            last_name varchar(50) not null,
+            pesel varchar(50) not null unique,
+            birth_date date not null
+            );
+
+            CREATE TABLE IF NOT EXISTS account_balances
+            (
+            id uuid default uuid_generate_v4() not null
+            constraint account_balances_pkey
+            primary key,
+            value numeric(7,2) not null,
+            currency varchar(10) not null,
+            customer_id uuid not null,
+            CONSTRAINT account_balances_customer_id FOREIGN KEY (customer_id)
+            REFERENCES customers (id)
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
