@@ -35,7 +35,7 @@ public class TestFixtures {
                 .build();
     }
 
-    public static Customer aCustomerWithAccountBalances() {
+    public static Customer aCustomerWithAccountBalances(BigDecimal accountBalanceValue) {
         var customer =
                 Customer.builder()
                         .id(UUID.randomUUID())
@@ -44,25 +44,26 @@ public class TestFixtures {
                         .lastName("LastName")
                         .birthDate(LocalDate.of(1900, 1, 1))
                         .build();
-        var balances = anAccountBalances(customer);
+        var balances = anAccountBalances(customer, accountBalanceValue);
         customer.setAccountBalances(balances);
 
         return customer;
     }
 
-    public static AccountBalance anAccountBalance(Customer customer, Currency currency) {
+    public static AccountBalance anAccountBalance(
+            Customer customer, Currency currency, BigDecimal value) {
         return AccountBalance.builder()
                 .customer(customer)
                 .currency(currency)
-                .value(BigDecimal.valueOf(20))
+                .value(value)
                 .id(UUID.randomUUID())
                 .build();
     }
 
-    public static Set<AccountBalance> anAccountBalances(Customer customer) {
+    public static Set<AccountBalance> anAccountBalances(Customer customer, BigDecimal value) {
         Set<AccountBalance> accountBalances = new HashSet<>();
-        accountBalances.add(anAccountBalance(customer, Currency.PLN));
-        accountBalances.add(anAccountBalance(customer, Currency.USD));
+        accountBalances.add(anAccountBalance(customer, Currency.PLN, value));
+        accountBalances.add(anAccountBalance(customer, Currency.USD, value));
 
         return accountBalances;
     }

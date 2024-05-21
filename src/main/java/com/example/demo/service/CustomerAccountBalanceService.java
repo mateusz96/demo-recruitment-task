@@ -18,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CustomerAccountBalanceService {
 
-    public static final String GIVEN_CURRIENCIES_ARE_THE_SAME = "Given curriencies should not be the same";
+    public static final String GIVEN_CURRIENCIES_ARE_THE_SAME =
+            "Given curriencies should not be the same";
     public static final String YOU_DO_NOT_HAVE_ENOUGH_MONEY = "You do not have enough money";
     private final CustomerService customerService;
     private final List<ExchangeService> exchangeServices;
@@ -32,10 +33,15 @@ public class CustomerAccountBalanceService {
         Customer customer = customerService.findByPesel(pesel);
         AccountBalance actualBalance = getAccountBalanceByCurrency(customer, currencyFrom);
         validateAccountBalance(actualBalance, value);
+
         ExchangeBidResponse exchangeBidResponse = getValueToExchange(currencyFrom, currencyTo);
 
-        findExchangeService(currencyTo)
-                .exchange(customer, actualBalance, value, exchangeBidResponse);
+        actualBalance.setValue(actualBalance.getValue().subtract(value));
+        AccountBalance balanceToExchange = getAccountBalanceByCurrency(customer, currencyTo);
+
+        BigDecimal exchangedValueToAdd =
+                findExchangeService(currencyTo).calculateExchangedValue(value, exchangeBidResponse);
+        balanceToExchange.setValue(balanceToExchange.getValue().add(exchangedValueToAdd));
 
         return customerService.save(customer);
     }
@@ -61,7 +67,7 @@ public class CustomerAccountBalanceService {
 
     private ExchangeService findExchangeService(Currency currencyTo) {
         return exchangeServices.stream()
-                .filter(it -> it.getCurrency() == currencyTo)
+                .filter(it -> it.getCurrencies().contains(currencyTo))
                 .findFirst()
                 .orElseThrow(TechnicalException::new);
     }

@@ -5,15 +5,16 @@ import com.example.demo.adaptor.Rate;
 import com.example.demo.exceptions.TechnicalException;
 import com.example.demo.persistence.model.Currency;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PlnExchangeService implements ExchangeService {
+public class ForeignCurrencyExchangeService implements ExchangeService {
 
     @Override
     public Set<Currency> getCurrencies() {
-        return Set.of(Currency.PLN);
+        return Set.of(Currency.USD);
     }
 
     @Override
@@ -21,13 +22,13 @@ public class PlnExchangeService implements ExchangeService {
             BigDecimal valueToAdd, ExchangeBidResponse exchangeBidResponse) {
         double bid = getBid(exchangeBidResponse);
 
-        return valueToAdd.multiply(BigDecimal.valueOf(bid));
+        return valueToAdd.divide(BigDecimal.valueOf(bid), 2, RoundingMode.DOWN);
     }
 
     @Override
     public double getBid(ExchangeBidResponse exchangeBidResponse) {
         return exchangeBidResponse.getRates().stream()
-                .map(Rate::getAsk)
+                .map(Rate::getBid)
                 .findFirst()
                 .orElseThrow(TechnicalException::new);
     }

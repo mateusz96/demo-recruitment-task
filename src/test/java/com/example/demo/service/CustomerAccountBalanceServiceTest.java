@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
+import com.example.demo.adaptor.ExchangeBidResponse;
 import com.example.demo.adaptor.NbpClient;
 import com.example.demo.exceptions.BusinessException;
 import com.example.demo.persistence.model.AccountBalance;
@@ -23,19 +24,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class CustomerAccountBalanceServiceTest {
 
+    private String pesel;
+    private BigDecimal value;
+    private BigDecimal entryValue;
+    private BigDecimal calculatedExchangeBid;
+    private ExchangeBidResponse exchangeBidResponse;
+
     @Mock private CustomerService customerService;
     @Mock private NbpClient nbpClient;
 
     @Spy private ArrayList<ExchangeService> mockedExchangeServices;
-
-    @InjectMocks private PlnExchangeService plnExchangeService;
-
-    @InjectMocks private UsdExchangeService usdExchangeService;
+    @Mock private PlnExchangeService plnExchangeService;
+    @Mock private ForeignCurrencyExchangeService foreignCurrencyExchangeService;
 
     @BeforeEach
     public void setup() {
         mockedExchangeServices.add(plnExchangeService);
-        mockedExchangeServices.add(usdExchangeService);
+        mockedExchangeServices.add(foreignCurrencyExchangeService);
+        pesel = "123";
+        value = BigDecimal.valueOf(10);
+        entryValue = BigDecimal.valueOf(20);
+        calculatedExchangeBid = BigDecimal.valueOf(5);
+        exchangeBidResponse = anExchangeBidResponse();
     }
 
     @Captor ArgumentCaptor<Customer> customerCaptor;
@@ -44,12 +54,13 @@ public class CustomerAccountBalanceServiceTest {
 
     @Test
     public void updateCustomerAccountBalance_whenExchangingPLNtoUSD() {
-        var pesel = "123";
-        var value = BigDecimal.valueOf(10);
-        var expected = aCustomerWithAccountBalances();
-        var exchangeBidResponse = anExchangeBidResponse();
+        var expected = aCustomerWithAccountBalances(entryValue);
         doReturn(expected).when(customerService).findByPesel(pesel);
         doReturn(exchangeBidResponse).when(nbpClient).getExchangeValuesForCurrency(Currency.USD);
+        doReturn(calculatedExchangeBid)
+                .when(foreignCurrencyExchangeService)
+                .calculateExchangedValue(value, exchangeBidResponse);
+        doReturn(Set.of(Currency.USD)).when(foreignCurrencyExchangeService).getCurrencies();
 
         service.updateCustomerAccountBalance(pesel, Currency.PLN, Currency.USD, value);
 
@@ -59,18 +70,20 @@ public class CustomerAccountBalanceServiceTest {
                         .collect(
                                 Collectors.toMap(
                                         AccountBalance::getCurrency, AccountBalance::getValue));
-        assertThat(balances.get(Currency.USD)).isEqualByComparingTo(BigDecimal.valueOf(25));
-        assertThat(balances.get(Currency.PLN)).isEqualByComparingTo(BigDecimal.valueOf(10));
+        assertThat(balances.get(Currency.USD))
+                .isEqualByComparingTo(entryValue.add(calculatedExchangeBid));
+        assertThat(balances.get(Currency.PLN)).isEqualByComparingTo(entryValue.subtract(value));
     }
 
     @Test
     public void updateCustomerAccountBalance_whenExchangingUSDtoPLN() {
-        var pesel = "123";
-        var value = BigDecimal.valueOf(10);
-        var expected = aCustomerWithAccountBalances();
-        var exchangeBidResponse = anExchangeBidResponse();
+        var expected = aCustomerWithAccountBalances(entryValue);
         doReturn(expected).when(customerService).findByPesel(pesel);
         doReturn(exchangeBidResponse).when(nbpClient).getExchangeValuesForCurrency(Currency.USD);
+        doReturn(calculatedExchangeBid)
+                .when(plnExchangeService)
+                .calculateExchangedValue(value, exchangeBidResponse);
+        doReturn(Set.of(Currency.PLN)).when(plnExchangeService).getCurrencies();
 
         service.updateCustomerAccountBalance(pesel, Currency.USD, Currency.PLN, value);
 
@@ -80,8 +93,9 @@ public class CustomerAccountBalanceServiceTest {
                         .collect(
                                 Collectors.toMap(
                                         AccountBalance::getCurrency, AccountBalance::getValue));
-        assertThat(balances.get(Currency.USD)).isEqualByComparingTo(BigDecimal.valueOf(10));
-        assertThat(balances.get(Currency.PLN)).isEqualByComparingTo(BigDecimal.valueOf(40));
+        assertThat(balances.get(Currency.USD)).isEqualByComparingTo(entryValue.subtract(value));
+        assertThat(balances.get(Currency.PLN))
+                .isEqualByComparingTo(entryValue.add(calculatedExchangeBid));
     }
 
     @Test
@@ -96,9 +110,8 @@ public class CustomerAccountBalanceServiceTest {
 
     @Test
     public void updateCustomerAccountBalance_shouldThrowException_whenNotEnoughMoney() {
-        var pesel = "123";
         var value = BigDecimal.valueOf(30);
-        var expected = aCustomerWithAccountBalances();
+        var expected = aCustomerWithAccountBalances(entryValue);
         doReturn(expected).when(customerService).findByPesel(pesel);
 
         assertThatThrownBy(
