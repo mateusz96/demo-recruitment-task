@@ -3,7 +3,10 @@ package com.example.demo.adaptor;
 import java.time.LocalDate;
 import lombok.*;
 
-@Getter
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Rate {
 
     private LocalDate effectiveDate;
