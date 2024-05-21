@@ -5,7 +5,6 @@ import com.example.demo.adaptor.Rate;
 import com.example.demo.persistence.model.AccountBalance;
 import com.example.demo.persistence.model.Currency;
 import com.example.demo.persistence.model.Customer;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -24,7 +23,6 @@ public class TestFixtures {
                 .birthDate(LocalDate.of(1900, 1, 1))
                 .accountBalances(new HashSet<>())
                 .build();
-
     }
 
     public static Customer aCustomerWithBirthDate(LocalDate date) {
@@ -38,13 +36,14 @@ public class TestFixtures {
     }
 
     public static Customer aCustomerWithAccountBalances() {
-        var customer = Customer.builder()
-                .id(UUID.randomUUID())
-                .pesel("123")
-                .firstName("FirstName")
-                .lastName("LastName")
-                .birthDate(LocalDate.of(1900, 1, 1))
-                .build();
+        var customer =
+                Customer.builder()
+                        .id(UUID.randomUUID())
+                        .pesel("123")
+                        .firstName("FirstName")
+                        .lastName("LastName")
+                        .birthDate(LocalDate.of(1900, 1, 1))
+                        .build();
         var balances = anAccountBalances(customer);
         customer.setAccountBalances(balances);
 
@@ -60,7 +59,6 @@ public class TestFixtures {
                 .build();
     }
 
-
     public static Set<AccountBalance> anAccountBalances(Customer customer) {
         Set<AccountBalance> accountBalances = new HashSet<>();
         accountBalances.add(anAccountBalance(customer, Currency.PLN));
@@ -75,6 +73,4 @@ public class TestFixtures {
                 .rates(List.of(new Rate(LocalDate.now(), 2, 2)))
                 .build();
     }
-
-
 }
