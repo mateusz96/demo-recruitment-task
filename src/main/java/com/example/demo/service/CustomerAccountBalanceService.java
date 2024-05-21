@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CustomerAccountBalanceService {
 
-    public static final String GIVEN_CURRIENCIES_ARE_THE_SAME = "Given curriencies are the same";
+    public static final String GIVEN_CURRIENCIES_ARE_THE_SAME = "Given curriencies should not be the same";
     public static final String YOU_DO_NOT_HAVE_ENOUGH_MONEY = "You do not have enough money";
     private final CustomerService customerService;
     private final List<ExchangeService> exchangeServices;
@@ -44,7 +44,7 @@ public class CustomerAccountBalanceService {
         return customer.getAccountBalances().stream()
                 .filter(it -> it.getCurrency() == currency)
                 .findFirst()
-                .orElseThrow(IllegalArgumentException::new);
+                .orElseThrow(TechnicalException::new);
     }
 
     private void validateAccountBalance(AccountBalance balance, BigDecimal value) {

@@ -33,7 +33,7 @@ public class NbpClient {
     }
 
     private String buildUrl(String currency, LocalDate date) {
-        String baseUrl = appConfig.getNpbBaseUrl() + EXCHANGE_URL;
-        return new UriTemplate(baseUrl).expand(currency, date).toString();
+        String url = appConfig.getNpbBaseUrl() + EXCHANGE_URL;
+        return new UriTemplate(url).expand(currency, date).toString();
     }
 }

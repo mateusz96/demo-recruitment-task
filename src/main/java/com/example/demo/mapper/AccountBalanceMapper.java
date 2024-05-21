@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AccountBalanceMapper {
+
     public AccountBalanceDto mapToDto(AccountBalance accountBalance) {
         return AccountBalanceDto.builder()
                 .value(accountBalance.getValue())

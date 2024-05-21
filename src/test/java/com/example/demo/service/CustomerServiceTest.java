@@ -69,6 +69,6 @@ public class CustomerServiceTest {
 
         assertThatThrownBy(() -> customerService.createCustomer(customer))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage(CustomerService.YOU_ARE_TOO_YOUNG_TO_CREATE_ACCOUNT);
+                .hasMessage(CustomerService.AGE_CONDITION_EXCEPTION_MESSAGE);
     }
 }
