@@ -37,8 +37,8 @@ public class CustomerAccountBalanceService {
         ExchangeBidResponse exchangeBidResponse = getValueToExchange(currencyFrom, currencyTo);
 
         actualBalance.setValue(actualBalance.getValue().subtract(value));
-        AccountBalance balanceToExchange = getAccountBalanceByCurrency(customer, currencyTo);
 
+        AccountBalance balanceToExchange = getAccountBalanceByCurrency(customer, currencyTo);
         BigDecimal exchangedValueToAdd =
                 findExchangeService(currencyTo).calculateExchangedValue(value, exchangeBidResponse);
         balanceToExchange.setValue(balanceToExchange.getValue().add(exchangedValueToAdd));
